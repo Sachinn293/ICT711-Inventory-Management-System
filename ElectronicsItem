@@ -1,0 +1,60 @@
+package ims;
+
+// ElectronicsItem extends Item - inherits all common fields and adds electronics-specific ones
+public class ElectronicsItem extends Item {
+
+    private int warrantyMonths;
+    private String brand;
+
+    public ElectronicsItem(String itemId, String itemName, String supplier, double price,
+                           int quantity, int warrantyMonths, String brand) {
+        // calling the parent constructor to set common fields
+        super(itemId, itemName, supplier, price, quantity);
+        this.warrantyMonths = warrantyMonths;
+        this.brand = brand;
+    }
+
+    public int getWarrantyMonths() {
+        return warrantyMonths;
+    }
+
+    public void setWarrantyMonths(int warrantyMonths) {
+        this.warrantyMonths = warrantyMonths;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    // Polymorphism - electronics value includes a small premium for warranty coverage
+    @Override
+    public double calculateValue() {
+        double baseValue = getPrice() * getQuantity();
+        // adding 5% value for each year of warranty
+        double warrantyPremium = baseValue * (warrantyMonths / 12.0) * 0.05;
+        return baseValue + warrantyPremium;
+    }
+
+    @Override
+    public String getCategory() {
+        return "Electronics";
+    }
+
+    // Shows all details specific to electronics
+    @Override
+    public String displayDetails() {
+        return toString() + " | Brand: " + brand + " | Warranty: " + warrantyMonths
+                + " months | Category: Electronics | Total Value: $"
+                + String.format("%.2f", calculateValue());
+    }
+
+    // Adds electronics-specific fields to CSV
+    @Override
+    public String toCSV() {
+        return super.toCSV() + "," + warrantyMonths + "," + brand + ",Electronics";
+    }
+}
