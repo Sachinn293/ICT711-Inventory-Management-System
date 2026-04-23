@@ -1,1 +1,59 @@
+package ims;
 
+// ClothingItem extends Item - adds size and material as extra attributes
+public class ClothingItem extends Item {
+
+    private String size;
+    private String material;
+
+    public ClothingItem(String itemId, String itemName, String supplier, double price,
+                        int quantity, String size, String material) {
+        super(itemId, itemName, supplier, price, quantity);
+        this.size = size;
+        this.material = material;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getMaterial() {
+        return material;
+    }
+
+    public void setMaterial(String material) {
+        this.material = material;
+    }
+
+    // Polymorphism - clothing made from premium materials gets a 20% markup
+    @Override
+    public double calculateValue() {
+        double baseValue = getPrice() * getQuantity();
+        // premium materials like silk or leather are valued higher
+        if (material.equalsIgnoreCase("Silk") || material.equalsIgnoreCase("Leather")) {
+            return baseValue * 1.20;
+        }
+        return baseValue;
+    }
+
+    @Override
+    public String getCategory() {
+        return "Clothing";
+    }
+
+    @Override
+    public String displayDetails() {
+        return toString() + " | Size: " + size + " | Material: " + material
+                + " | Category: Clothing | Total Value: $"
+                + String.format("%.2f", calculateValue());
+    }
+
+    @Override
+    public String toCSV() {
+        return super.toCSV() + "," + size + "," + material + ",Clothing";
+    }
+}
