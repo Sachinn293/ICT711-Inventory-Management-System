@@ -1,1 +1,85 @@
+package ims;
 
+// Abstract class that serves as the base for all inventory items
+// We made this abstract because every item must be a specific type (electronics, grocery, clothing)
+// and each type calculates value and displays info differently
+public abstract class Item {
+
+    // Private fields - encapsulation so data can only be accessed through getters/setters
+    private String itemId;
+    private String itemName;
+    private String supplier;
+    private double price;
+    private int quantity;
+
+    // Constructor to set up basic item details
+    public Item(String itemId, String itemName, String supplier, double price, int quantity) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+        this.supplier = supplier;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    // Getters and setters for all fields
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this.itemId = itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    // Abstract methods - each subclass must provide its own version
+    // This is polymorphism - same method name but different behaviour depending on item type
+    public abstract double calculateValue();
+
+    public abstract String getCategory();
+
+    public abstract String displayDetails();
+
+    // Converts item data to CSV format for file saving
+    // Each subclass will add its own extra fields after these common ones
+    public String toCSV() {
+        return itemId + "," + itemName + "," + supplier + "," + price + "," + quantity;
+    }
+
+    // Common toString that all items share
+    @Override
+    public String toString() {
+        return "ID: " + itemId + " | Name: " + itemName + " | Supplier: " + supplier
+                + " | Price: $" + String.format("%.2f", price) + " | Qty: " + quantity;
+    }
+}
