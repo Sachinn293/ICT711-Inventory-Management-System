@@ -1,0 +1,115 @@
+package ims;
+
+// StockReview handles periodic evaluations of inventory items
+// It checks stock levels and triggers rewards (discounts) or penalties (reorder alerts)
+public class StockReview {
+
+    private String reviewId;
+    private String itemId;
+    private String reviewDate;
+    private String status;      // "Overstocked", "Well-stocked", "Low Stock", "Critical"
+    private String action;      // what action was taken based on the review
+    private int stockLevel;     // quantity at time of review
+
+    // Thresholds for stock evaluation
+    private static final int LOW_STOCK_THRESHOLD = 5;
+    private static final int CRITICAL_STOCK_THRESHOLD = 2;
+    private static final int OVERSTOCK_THRESHOLD = 100;
+
+    public StockReview(String reviewId, String itemId, String reviewDate, int stockLevel) {
+        this.reviewId = reviewId;
+        this.itemId = itemId;
+        this.reviewDate = reviewDate;
+        this.stockLevel = stockLevel;
+        // automatically evaluate when review is created
+        this.status = evaluateStock(stockLevel);
+        this.action = determineAction(this.status);
+    }
+
+    // Evaluates stock level and returns a status string
+    private String evaluateStock(int qty) {
+        if (qty <= CRITICAL_STOCK_THRESHOLD) {
+            return "Critical";
+        } else if (qty <= LOW_STOCK_THRESHOLD) {
+            return "Low Stock";
+        } else if (qty >= OVERSTOCK_THRESHOLD) {
+            return "Overstocked";
+        } else {
+            return "Well-stocked";
+        }
+    }
+
+    // Determines what action to take based on stock status
+    // This is the reward/penalty system the assignment asks for
+    private String determineAction(String status) {
+        switch (status) {
+            case "Critical":
+                return "PENALTY: Urgent reorder required! Supplier notified.";
+            case "Low Stock":
+                return "PENALTY: Reorder recommended. Stock running low.";
+            case "Overstocked":
+                return "REWARD: Apply 10% discount to move excess inventory.";
+            case "Well-stocked":
+                return "REWARD: Stock levels healthy. No action needed.";
+            default:
+                return "No action determined.";
+        }
+    }
+
+    // Applies the reward action - returns discount percentage
+    public double applyReward() {
+        if (status.equals("Overstocked")) {
+            System.out.println(">> Discount of 10% applied to reduce overstock.");
+            return 0.10;
+        } else if (status.equals("Well-stocked")) {
+            System.out.println(">> Stock is healthy. Keep up the good management!");
+            return 0.0;
+        }
+        return 0.0;
+    }
+
+    // Applies the penalty action - returns suggested reorder quantity
+    public int applyPenalty() {
+        if (status.equals("Critical")) {
+            int reorderQty = 50;
+            System.out.println(">> URGENT: Reorder " + reorderQty + " units immediately!");
+            return reorderQty;
+        } else if (status.equals("Low Stock")) {
+            int reorderQty = 25;
+            System.out.println(">> WARNING: Reorder " + reorderQty + " units soon.");
+            return reorderQty;
+        }
+        return 0;
+    }
+
+    // Getters
+    public String getReviewId() {
+        return reviewId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getReviewDate() {
+        return reviewDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public int getStockLevel() {
+        return stockLevel;
+    }
+
+    @Override
+    public String toString() {
+        return "Review ID: " + reviewId + " | Item ID: " + itemId + " | Date: " + reviewDate
+                + " | Stock: " + stockLevel + " | Status: " + status + " | Action: " + action;
+    }
+}
