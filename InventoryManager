@@ -1,0 +1,299 @@
+package ims;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+
+// InventoryManager is the core class that manages all inventory operations
+// It uses different collections for different purposes:
+// - ArrayList for the main item list (fast access by index, good for searching)
+// - LinkedList for review history (efficient adding at both ends)
+// - Queue for pending stock alerts (FIFO - first alert gets processed first)
+public class InventoryManager {
+
+    // Main list of all items - ArrayList chosen because we need fast random access
+    // when searching by ID or name, and we mostly read more than we insert/remove
+    private ArrayList<Item> itemList;
+
+    // History of all stock reviews - LinkedList chosen because we frequently add
+    // new reviews and sometimes need to access from both ends (newest and oldest)
+    private LinkedList<StockReview> reviewHistory;
+
+    // Queue for pending stock alerts that need attention - Queue because alerts
+    // should be processed in the order they were raised (first in, first out)
+    private Queue<StockReview> pendingAlerts;
+
+    // Counter for generating unique review IDs
+    private int reviewCounter;
+
+    public InventoryManager() {
+        itemList = new ArrayList<>();
+        reviewHistory = new LinkedList<>();
+        pendingAlerts = new LinkedList<>(); // LinkedList implements Queue interface
+        reviewCounter = 1;
+    }
+
+    // ==================== FILE HANDLING ====================
+
+    // Loads items from CSV file into the ArrayList
+    // Uses try-catch for FileNotFoundException and IOException
+    public void loadFromFile(String filename) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            // skip header line
+            reader.readLine();
+
+            while ((line = reader.readLine()) != null) {
+                try {
+                    Item item = parseCSVLine(line);
+                    if (item != null) {
+                        itemList.add(item);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Warning: Skipping invalid line -> " + line);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Warning: Skipping incomplete line -> " + line);
+                }
+            }
+            System.out.println("Successfully loaded " + itemList.size() + " items from " + filename);
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: File '" + filename + "' not found. Please check the file path.");
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
+    }
+
+    // Parses a single CSV line and creates the right type of Item object
+    private Item parseCSVLine(String line) {
+        String[] parts = line.split(",");
+        String id = parts[0].trim();
+        String name = parts[1].trim();
+        String supplier = parts[2].trim();
+        double price = Double.parseDouble(parts[3].trim());
+        int qty = Integer.parseInt(parts[4].trim());
+        String category = parts[parts.length - 1].trim(); // last field is always category
+
+        switch (category) {
+            case "Electronics":
+                int warranty = Integer.parseInt(parts[5].trim());
+                String brand = parts[6].trim();
+                return new ElectronicsItem(id, name, supplier, price, qty, warranty, brand);
+            case "Grocery":
+                String expiry = parts[5].trim();
+                boolean organic = Boolean.parseBoolean(parts[6].trim());
+                return new GroceryItem(id, name, supplier, price, qty, expiry, organic);
+            case "Clothing":
+                String size = parts[5].trim();
+                String material = parts[6].trim();
+                return new ClothingItem(id, name, supplier, price, qty, size, material);
+            default:
+                System.out.println("Unknown category: " + category);
+                return null;
+        }
+    }
+
+    // Saves all items back to the CSV file
+    public void saveToFile(String filename) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            // write header
+            writer.write("ItemID,ItemName,Supplier,Price,Quantity,Field1,Field2,Category");
+            writer.newLine();
+
+            for (Item item : itemList) {
+                writer.write(item.toCSV());
+                writer.newLine();
+            }
+            System.out.println("Data saved successfully to " + filename);
+
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    // ==================== CRUD OPERATIONS ====================
+
+    // Add a new item to inventory
+    public void addItem(Item item) {
+        // check if ID already exists
+        for (Item existing : itemList) {
+            if (existing.getItemId().equalsIgnoreCase(item.getItemId())) {
+                System.out.println("Error: Item with ID '" + item.getItemId() + "' already exists.");
+                return;
+            }
+        }
+        itemList.add(item);
+        System.out.println("Item '" + item.getItemName() + "' added successfully.");
+    }
+
+    // Search by ID
+    public Item searchById(String id) {
+        for (Item item : itemList) {
+            if (item.getItemId().equalsIgnoreCase(id)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    // Search by name (partial match)
+    public ArrayList<Item> searchByName(String name) {
+        ArrayList<Item> results = new ArrayList<>();
+        for (Item item : itemList) {
+            if (item.getItemName().toLowerCase().contains(name.toLowerCase())) {
+                results.add(item);
+            }
+        }
+        return results;
+    }
+
+    // Search by category
+    public ArrayList<Item> searchByCategory(String category) {
+        ArrayList<Item> results = new ArrayList<>();
+        for (Item item : itemList) {
+            if (item.getCategory().equalsIgnoreCase(category)) {
+                results.add(item);
+            }
+        }
+        return results;
+    }
+
+    // Update an existing item - returns true if successful
+    public boolean updateItem(String id, String newName, String newSupplier,
+                              double newPrice, int newQuantity) {
+        Item item = searchById(id);
+        if (item == null) {
+            System.out.println("Error: No item found with ID '" + id + "'.");
+            return false;
+        }
+        item.setItemName(newName);
+        item.setSupplier(newSupplier);
+        item.setPrice(newPrice);
+        item.setQuantity(newQuantity);
+        System.out.println("Item '" + id + "' updated successfully.");
+        return true;
+    }
+
+    // Delete an item by ID
+    public boolean deleteItem(String id) {
+        Item item = searchById(id);
+        if (item == null) {
+            System.out.println("Error: No item found with ID '" + id + "'.");
+            return false;
+        }
+        itemList.remove(item);
+        System.out.println("Item '" + id + "' deleted successfully.");
+        return true;
+    }
+
+    // Display all items
+    public void displayAllItems() {
+        if (itemList.isEmpty()) {
+            System.out.println("No items in inventory.");
+            return;
+        }
+        System.out.println("\n===== ALL INVENTORY ITEMS =====");
+        System.out.println("Total items: " + itemList.size());
+        System.out.println("-------------------------------");
+        for (Item item : itemList) {
+            // polymorphism in action - displayDetails() behaves differently
+            // depending on whether item is Electronics, Grocery, or Clothing
+            System.out.println(item.displayDetails());
+        }
+        System.out.println("===============================\n");
+    }
+
+    // ==================== STOCK EVALUATION ====================
+
+    // Runs a stock review for all items - this is the periodic evaluation feature
+    public void runStockEvaluation() {
+        System.out.println("\n===== RUNNING STOCK EVALUATION =====");
+        String currentDate = java.time.LocalDate.now().toString();
+
+        for (Item item : itemList) {
+            String reviewId = "REV" + String.format("%03d", reviewCounter++);
+            StockReview review = new StockReview(reviewId, item.getItemId(),
+                    currentDate, item.getQuantity());
+
+            // add to review history (LinkedList)
+            reviewHistory.add(review);
+
+            // if stock is low or critical, add to pending alerts queue
+            if (review.getStatus().equals("Critical") || review.getStatus().equals("Low Stock")) {
+                pendingAlerts.add(review);
+            }
+
+            System.out.println("\nItem: " + item.getItemName() + " (ID: " + item.getItemId() + ")");
+            System.out.println("  Stock Level: " + item.getQuantity());
+            System.out.println("  Status: " + review.getStatus());
+            System.out.println("  Action: " + review.getAction());
+
+            // apply reward or penalty based on status
+            if (review.getStatus().equals("Overstocked") || review.getStatus().equals("Well-stocked")) {
+                review.applyReward();
+            } else {
+                review.applyPenalty();
+            }
+        }
+        System.out.println("\n====================================");
+        System.out.println("Evaluation complete. " + pendingAlerts.size() + " alerts pending.\n");
+    }
+
+    // Process pending alerts from the queue (FIFO order)
+    public void processPendingAlerts() {
+        if (pendingAlerts.isEmpty()) {
+            System.out.println("No pending alerts to process.");
+            return;
+        }
+
+        System.out.println("\n===== PROCESSING PENDING ALERTS =====");
+        // Using Queue's poll() method - removes and returns the head of the queue
+        while (!pendingAlerts.isEmpty()) {
+            StockReview alert = pendingAlerts.poll();
+            System.out.println("Processing alert: " + alert.toString());
+            System.out.println("  -> Alert processed and removed from queue.");
+        }
+        System.out.println("All alerts have been processed.\n");
+    }
+
+    // View review history (uses LinkedList)
+    public void viewReviewHistory() {
+        if (reviewHistory.isEmpty()) {
+            System.out.println("No review history available. Run a stock evaluation first.");
+            return;
+        }
+
+        System.out.println("\n===== STOCK REVIEW HISTORY =====");
+        System.out.println("Total reviews: " + reviewHistory.size());
+        System.out.println("--------------------------------");
+        // LinkedList lets us access first and last easily
+        System.out.println("Most recent: " + reviewHistory.getLast().getReviewDate());
+        System.out.println("Oldest: " + reviewHistory.getFirst().getReviewDate());
+        System.out.println("--------------------------------");
+        for (StockReview review : reviewHistory) {
+            System.out.println(review.toString());
+        }
+        System.out.println("================================\n");
+    }
+
+    // Get count of items
+    public int getItemCount() {
+        return itemList.size();
+    }
+
+    // Get total inventory value - demonstrates polymorphism since each item type
+    // calculates value differently
+    public double getTotalInventoryValue() {
+        double total = 0;
+        for (Item item : itemList) {
+            total += item.calculateValue(); // polymorphic call
+        }
+        return total;
+    }
+}
