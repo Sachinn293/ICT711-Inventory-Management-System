@@ -1,6 +1,6 @@
 package ims;
 
-// ClothingItem extends Item - adds size and material as extra attributes
+// ClothingItem extends Item - Its helps us to adds size and material as extra attributes
 public class ClothingItem extends Item {
 
     private String size;
