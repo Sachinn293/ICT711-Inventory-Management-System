@@ -1,0 +1,59 @@
+package ims;
+
+// GroceryItem extends Item - has expiry date and whether its organic or not
+public class GroceryItem extends Item {
+
+    private String expiryDate;
+    private boolean isOrganic;
+
+    public GroceryItem(String itemId, String itemName, String supplier, double price,
+                       int quantity, String expiryDate, boolean isOrganic) {
+        super(itemId, itemName, supplier, price, quantity);
+        this.expiryDate = expiryDate;
+        this.isOrganic = isOrganic;
+    }
+
+    public String getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(String expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public boolean isOrganic() {
+        return isOrganic;
+    }
+
+    public void setOrganic(boolean organic) {
+        isOrganic = organic;
+    }
+
+    // Polymorphism - grocery items get a 15% premium if they are organic
+    @Override
+    public double calculateValue() {
+        double baseValue = getPrice() * getQuantity();
+        if (isOrganic) {
+            return baseValue * 1.15; // organic items are worth more
+        }
+        return baseValue;
+    }
+
+    @Override
+    public String getCategory() {
+        return "Grocery";
+    }
+
+    @Override
+    public String displayDetails() {
+        String organicStatus = isOrganic ? "Yes" : "No";
+        return toString() + " | Expiry: " + expiryDate + " | Organic: " + organicStatus
+                + " | Category: Grocery | Total Value: $"
+                + String.format("%.2f", calculateValue());
+    }
+
+    @Override
+    public String toCSV() {
+        return super.toCSV() + "," + expiryDate + "," + isOrganic + ",Grocery";
+    }
+}
