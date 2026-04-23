@@ -1,1 +1,13 @@
-
+ItemID,ItemName,Supplier,Price,Quantity,Field1,Field2,Category
+E001,Laptop Dell Inspiron,Bidhan Bhusal,899.99,25,24,Dell,Electronics
+E002,Samsung Galaxy S24,Sachin Shrestha,799.5,3,12,Samsung,Electronics
+E003,Sony Headphones WH-1000,Ashoj Deuja,299.99,45,18,Sony,Electronics
+G001,Organic Brown Rice,Louish Shrestha,5.99,150,15/03/2026,TRUE,Grocery
+G002,Fresh Milk 2L,Md Shihab Shamim,3.49,2,20/05/2025,FALSE,Grocery
+G003,Green Tea Pack,Bidhan Bhusal,8.99,60,10/08/2026,TRUE,Grocery
+G004,Canned Tuna,Sachin Shrestha,2.99,200,1/01/2027,FALSE,Grocery
+C001,Winter Jacket,Ashoj Deuja,129.99,15,L,Leather,Clothing
+C002,Cotton T-Shirt,Louish Shrestha,19.99,80,M,Cotton,Clothing
+C003,Silk Scarf,Md Shihab Shamim,49.99,35,S,Silk,Clothing
+E004,Wireless Mouse,Bidhan Bhusal,24.99,1,12,Logitech,Electronics
+C004,Denim Jeans,Sachin Shrestha,59.99,40,L,Denim,Clothing
